@@ -17,6 +17,7 @@ export class TrackntraceCdkStack extends Stack {
     // Code for solution starts here 
     
     const ledgerName = 'trackntrace-using-qldb'
+    const start = Date.now().toString()
     
     // ** IAM role for Ledger processing
     const ledgerProcessingRole = new iam.Role(this, 'ledger-processing-role', {
@@ -196,7 +197,7 @@ export class TrackntraceCdkStack extends Stack {
   // Create the User Pool for the App
     const userPool = new cognito.UserPool(this, 'trackntrace-userpool', {
       removalPolicy: RemovalPolicy.DESTROY,
-      userPoolName: 'trackntrace-userpool',
+      userPoolName: 'trackntrace-userpool'+'-'+start,
       signInCaseSensitive: false, // case insensitive is preferred in most situations
       selfSignUpEnabled: true,
       userVerification: {
@@ -219,12 +220,12 @@ export class TrackntraceCdkStack extends Stack {
     // Add the Cognito domain to user pool 
     const domain = userPool.addDomain('CognitoDomain', {
       cognitoDomain: {
-        domainPrefix: 'trackntrace',
+        domainPrefix: 'trackntrace'+'-'+start,
       },
     });
     
     const appClient = userPool.addClient('postman-app-client',{
-        userPoolClientName : 'postman-app-client',
+        userPoolClientName : 'postman-app-client'+'-'+start,
         refreshTokenValidity: Duration.days(30),
         accessTokenValidity: Duration.minutes(60),
         idTokenValidity: Duration.minutes(60),
@@ -261,7 +262,7 @@ export class TrackntraceCdkStack extends Stack {
   
   
   const api = new apigw.RestApi(this, 'TracknTraceApi', {
-    restApiName: 'TracknTraceApi',
+    restApiName: 'TracknTraceApi'+'-'+start,
     cloudWatchRole: true,
     defaultCorsPreflightOptions: {
       allowOrigins: [ '*' ],
