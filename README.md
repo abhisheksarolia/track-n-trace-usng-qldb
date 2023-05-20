@@ -9,7 +9,7 @@ track-n-trace-usng-qldb
 cdk bootstrap aws://ACCOUNT-NUMBER/REGION
 
 ( Here, replace with your respective AWS account and REGION values)
-6. This soluton is built against python 3.9 (Follow steps here to install latest stable release - https://www.python.org/downloads/), check installed python version - 
+6. This soluton is built against python 3.9 (Follow steps here to install latest stable release for 3.9 - https://tecadmin.net/install-python-3-9-on-amazon-linux/), check installed python version - 
 python --version 
 
 6. Install required dependency modules from the “requirements.txt” using python package manager-
@@ -26,6 +26,9 @@ Clean Up:
 
 1. Destroy the resources - cdk destroy 
 2. Edit QLDB delete protection and delete that 
+
+
+
 
 
 
