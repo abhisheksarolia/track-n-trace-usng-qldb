@@ -7,7 +7,7 @@ track-n-trace-usng-qldb
 4. Install AWS CDK globally using node package manager: npm install -g aws-cdk
 5. Install CDK package : npm install aws-cdk-lib -g -save (Note: If you created a CDK project using cdk init, you don't need to manually install aws-cdk-lib)
 
-6. This soluton is built against python 3.9 (Follow steps mentioned here - https://realpython.com/installing-python/  to install the specific python release - https://www.python.org/downloads/), check installed python version - 
+6. This soluton is built against python 3.9 (Follow steps mentioned here - https://tecadmin.net/install-python-3-9-on-amazon-linux/  to install the specific python release - https://www.python.org/downloads/), check installed python version - 
 python3.9 --version 
 
 7. Create new folder path on project root as - sharedLib/python, Install required dependency modules from the “requirements.txt” using python package manager-
@@ -21,13 +21,6 @@ pip3.9 install awsiotsdk
 
 10. AWS CDK requires dedicated Amazon S3 buckets and other containers to be available to AWS CloudFormation during deployment. Bootstrap these using below command - 
 cdk bootstrap aws://ACCOUNT-NUMBER/REGION
-
-( Here, replace with your respective AWS account and REGION values)
-<<<<<<< HEAD
-6. This soluton is built against python 3.9 (Follow steps here to install latest stable release for 3.9 - https://tecadmin.net/install-python-3-9-on-amazon-linux/), check installed python version - 
-python --version 
-=======
->>>>>>> 1a3e4306e93a7f21512e9ccaa95d7b1a0d383f4b
 
 11. Build the project using cdk synth
 12. deploy the project using cdk deploy 
