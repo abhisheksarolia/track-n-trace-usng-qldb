@@ -29,19 +29,6 @@ export class TrackntraceCdkStack extends Stack {
     ledgerProcessingRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("service-role/AWSLambdaBasicExecutionRole"));
     ledgerProcessingRole.addManagedPolicy(iam.ManagedPolicy.fromAwsManagedPolicyName("AmazonQLDBFullAccess"));
     
-    // test code 
-    // const testIntegrator = new lambda.Function(this, 'test-integrator', {
-    //   runtime: lambda.Runtime.PYTHON_3_9,
-    //   code: lambda.Code.fromAsset('lambda/testIntegrator'),
-    //   handler: 'lambda_function.lambda_handler',
-    //   functionName: 'test-integrator',
-    //   role: ledgerProcessingRole,
-    //   timeout: Duration.seconds(300),
-    //   // environment: {
-    //   //   'LedgerNameString': ledgerName
-    //   // },
-    // });
-    
     // Shared lib layer 
     
     const lambdaSharedLibLayer = new lambda.LayerVersion(this, 'lambda-shared-lib-layer', {
@@ -50,7 +37,7 @@ export class TrackntraceCdkStack extends Stack {
       code: lambda.Code.fromAsset('sharedLib'),
       compatibleArchitectures: [lambda.Architecture.X86_64],
       // compatibleRuntimes: [lambda.Runtime.PYTHON_3_9, lambda.Runtime.PYTHON_3_8, lambda.Runtime.PYTHON_3_7]
-      compatibleRuntimes: [lambda.Runtime.PYTHON_3_9]
+      compatibleRuntimes: [lambda.Runtime.PYTHON_3_7]
     });
 
     // Shared Files layer 
@@ -61,13 +48,13 @@ export class TrackntraceCdkStack extends Stack {
       code: lambda.Code.fromAsset('sharedFiles'),
       compatibleArchitectures: [lambda.Architecture.X86_64],
       // compatibleRuntimes: [lambda.Runtime.PYTHON_3_9, lambda.Runtime.PYTHON_3_8, lambda.Runtime.PYTHON_3_7]
-      compatibleRuntimes: [lambda.Runtime.PYTHON_3_9]
+      compatibleRuntimes: [lambda.Runtime.PYTHON_3_7]
     });
     
     // ** Processing lambda to create and initialize ledger with index and tables
     
     const ledgerInitializer = new lambda.Function(this, 'ledger-initializer', {
-      runtime: lambda.Runtime.PYTHON_3_9,
+      runtime: lambda.Runtime.PYTHON_3_7,
       code: lambda.Code.fromAsset('lambda/ledgerInitializer'),
       handler: 'lambda_function.lambda_handler',
       functionName: 'ledger-initializer',
@@ -103,22 +90,19 @@ export class TrackntraceCdkStack extends Stack {
     // ** Processing lambda to get ledger operational status 
     
     const ledgerDescriber = new lambda.Function(this, 'ledger-describer', {
-      runtime: lambda.Runtime.PYTHON_3_9,
+      runtime: lambda.Runtime.PYTHON_3_7,
       code: lambda.Code.fromAsset('lambda/ledgerDescriber'),
       handler: 'lambda_function.lambda_handler',
       functionName: 'ledger-describer',
       layers: [lambdaSharedLibLayer, lambdaSharedFileLayer],
       role: ledgerProcessingRole,
       timeout: Duration.seconds(300),
-      // environment: {
-      //   'LedgerNameString': ledgerName
-      // },
     });
     
     // ** Processing lambda to create and seed item table on ledger with dummy records
     
     const itemCreator = new lambda.Function(this, 'item-creator', {
-      runtime: lambda.Runtime.PYTHON_3_9,
+      runtime: lambda.Runtime.PYTHON_3_7,
       code: lambda.Code.fromAsset('lambda/itemCreator'),
       handler: 'lambda_function.lambda_handler',
       functionName: 'item-creator',
@@ -133,7 +117,7 @@ export class TrackntraceCdkStack extends Stack {
     // ** Processing lambda to update package details on ledger item table
     
     const itemUpdate = new lambda.Function(this, 'item-update', {
-      runtime: lambda.Runtime.PYTHON_3_9,
+      runtime: lambda.Runtime.PYTHON_3_7,
       code: lambda.Code.fromAsset('lambda/itemUpdate'),
       handler: 'lambda_function.lambda_handler',
       functionName: 'item-update',
@@ -148,7 +132,7 @@ export class TrackntraceCdkStack extends Stack {
     // ** Processing lambda to get product details from ledger with validations
     
     const itemGet = new lambda.Function(this, 'item-get', {
-      runtime: lambda.Runtime.PYTHON_3_9,
+      runtime: lambda.Runtime.PYTHON_3_7,
       code: lambda.Code.fromAsset('lambda/itemGet'),
       handler: 'lambda_function.lambda_handler',
       functionName: 'item-get',
@@ -163,7 +147,7 @@ export class TrackntraceCdkStack extends Stack {
     // ** Processing lambda to validate details from ledger
     
     const dataValidation = new lambda.Function(this, 'data-validation', {
-      runtime: lambda.Runtime.PYTHON_3_9,
+      runtime: lambda.Runtime.PYTHON_3_7,
       code: lambda.Code.fromAsset('lambda/dataValidation'),
       handler: 'lambda_function.lambda_handler',
       functionName: 'data-validation',
@@ -178,7 +162,7 @@ export class TrackntraceCdkStack extends Stack {
     // ** Processing lambda for sensor update
     
     const sensorUpdate = new lambda.Function(this, 'sensor-update', {
-      runtime: lambda.Runtime.PYTHON_3_9,
+      runtime: lambda.Runtime.PYTHON_3_7,
       code: lambda.Code.fromAsset('lambda/sensorUpdate'),
       handler: 'lambda_function.lambda_handler',
       functionName: 'sensor-update',
@@ -299,17 +283,19 @@ export class TrackntraceCdkStack extends Stack {
                                   // requestParameters:{"method.request.querystring.ledgerName": "true"},
                                   // requestTemplates:{ "application/json": "{ \"ledgerName\": \" $input.params('ledgerName')\" }" }
                                   }), 
-    {
-      authorizer: auth,
-      authorizationType: apigw.AuthorizationType.COGNITO
+    // {
+    //   authorizer: auth,
+    //   authorizationType: apigw.AuthorizationType.COGNITO
       
-    })
+    // }
+    )
   ledgerResource.addMethod('POST', new apigw.LambdaIntegration(ledgerInitializer,{allowTestInvoke:true}), 
-    {
-      authorizer: auth,
-      authorizationType: apigw.AuthorizationType.COGNITO
+    // {
+    //   authorizer: auth,
+    //   authorizationType: apigw.AuthorizationType.COGNITO
       
-    })
+    // }
+    )
   // const loginResource = trkntrcResource.addResource('login'); // POST
   // loginResource.addMethod('POST')
   // const registerResource = trkntrcResource.addResource('register'); // POST 
@@ -318,34 +304,38 @@ export class TrackntraceCdkStack extends Stack {
   const productResource = trkntrcResource.addResource('product');
   
   productResource.addMethod('POST', new apigw.LambdaIntegration(itemCreator,{allowTestInvoke:true}), 
-    {
-      authorizer: auth,
-      authorizationType: apigw.AuthorizationType.COGNITO
+    // {
+    //   authorizer: auth,
+    //   authorizationType: apigw.AuthorizationType.COGNITO
       
-    })
+    // }
+    )
     
   productResource.addMethod('PUT', new apigw.LambdaIntegration(itemUpdate,{allowTestInvoke:true}), 
-    {
-      authorizer: auth,
-      authorizationType: apigw.AuthorizationType.COGNITO
+    // {
+    //   authorizer: auth,
+    //   authorizationType: apigw.AuthorizationType.COGNITO
       
-    })
+    // }
+    )
   
   productResource.addMethod('GET', new apigw.LambdaIntegration(itemGet,{allowTestInvoke:true}), 
-    {
-      authorizer: auth,
-      authorizationType: apigw.AuthorizationType.COGNITO
+    // {
+    //   authorizer: auth,
+    //   authorizationType: apigw.AuthorizationType.COGNITO
       
-    })
+    // }
+    )
     
   const validateResource = trkntrcResource.addResource('validate');  // POST - verify paylod for compliance and coldchain
   
   validateResource.addMethod('POST', new apigw.LambdaIntegration(dataValidation,{allowTestInvoke:true}), 
-    {
-      authorizer: auth,
-      authorizationType: apigw.AuthorizationType.COGNITO
+    // {
+    //   authorizer: auth,
+    //   authorizationType: apigw.AuthorizationType.COGNITO
       
-    })
+    // }
+    )
 
 // AWS IoT thing and rule 
 
@@ -353,7 +343,7 @@ export class TrackntraceCdkStack extends Stack {
     thingName: 'trackntraceSensor',
   });
   
-  const querySql = `SELECT temperature as temperature, package as package, batch as batch, ${ledgerName} as ledgername FROM 'trkntrcesensortopic'`
+  const querySql = `SELECT data as data, package as package, batch as batch, ${ledgerName} as ledgername FROM 'trkntrcesensortopic'`
   const trkntrceTopicRule = new iot.CfnTopicRule(this, 'trkntrceTopicRule', {
     ruleName: 'trkntrceTopicRule',
     topicRulePayload: {

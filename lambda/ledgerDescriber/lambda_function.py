@@ -5,18 +5,11 @@ from boto3 import client
 from pyqldb.driver.qldb_driver import QldbDriver
 from common import create_qldb_driver 
 import json
-#import os
-#import botocore.exceptions
 
-
-# logger = getLogger(__name__)
-# basicConfig(level=INFO)
 qldb_client = client('qldb')
 
 LEDGER_CREATION_POLL_PERIOD_SEC = 20
 ACTIVE_STATE = "ACTIVE"
-#ledger_name = os.environ.get('LedgerNameString')
-
 
 def get_ledger_state(ledger_name):
     ledger_status = ''
@@ -44,12 +37,10 @@ def get_ledger_state(ledger_name):
 
 def lambda_handler(event, context):
     
-    # API_flow = False
     processing_error = False
     return_msg = ''
  
-    # Check if ledger exist or not
-    print(event)
+    # Check if query strings are passed or not
     
     if event.get('queryStringParameters') is None:
         return_msg = 'Required parameter is missing'
@@ -58,7 +49,9 @@ def lambda_handler(event, context):
         ledger_name = event.get('queryStringParameters').get('ledgerName')
 
     if not processing_error:
-        #ledger_name = event.get('ledgerName')
+        
+        # Check if ledge is in operational state or not
+        
         ledger_exist, ledger_status = get_ledger_state(ledger_name)
     
         if ledger_exist:

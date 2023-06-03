@@ -6,6 +6,7 @@ from common import convert_object_to_ion, create_qldb_driver, to_base_64
 from pyqldb.driver.qldb_driver import QldbDriver
 import json
 import os
+import uuid
 
 
 
@@ -66,7 +67,7 @@ def update_item_coldchain(driver,table_name, document, fieldname , fieldvalue, d
     if first_record:
         
         print("Existing record found, initiating document update processing..")
-        statement = "UPDATE {} As u SET u.PackageSeal = '{}', u.PkgOwner = '{}' WHERE u.PackageLabel = '{}' AND u.ItemSpecifications.MfgBatchNumber = '{}'".format(table_name,data, useremail,fieldvalue, document.get('batch'))
+        statement = "UPDATE {} As u SET u.PackageSeal = '{}', u.PkgOwner = '{}', u.PackageChain.Status = '{}' WHERE u.PackageLabel = '{}' AND u.ItemSpecifications.MfgBatchNumber = '{}'".format(table_name,data, useremail,"Activated",fieldvalue, document.get('batch'))
         print(statement)
         cursor = driver.execute_lambda(lambda executor: executor.execute_statement(statement))
         doccount = 0
@@ -131,7 +132,7 @@ def lambda_handler(event, context):
     
     if event.get('body') is None:
         # pick from lambda test payload
-        print("lambda test flow")
+        print("lambda console flow")
         batch = event.get('batch')
         package = event.get('package')
         data = event.get('data')
@@ -152,7 +153,8 @@ def lambda_handler(event, context):
     # Initiate the business processing using QLDB driver object 
     try:
         with create_qldb_driver(ledger_name) as driver:
-            # Fetch the authenticated user id 
+            # Fetch the authenticated user id, if invoked via auth flow else use default
+            useremail = ''
             if event.get('requestContext').get('authorizer').get('claims') is not None:
                 useremail = event.get('requestContext').get('authorizer').get('claims').get('email')
                 print('Authorized user email on token - {}'.format(useremail))
@@ -200,7 +202,6 @@ def lambda_handler(event, context):
                     return_msg = 'Item coldchain details successfully updated'
                 else:
                     return_msg = 'Existing Item record not found for coldchain update'                
-                
     
     except Exception as e:
         processingerror = True

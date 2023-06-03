@@ -59,9 +59,8 @@ else:
 
 print ('Publishing message on topic {}'.format(pub_topic))
 
-temp=12
 message_data ={
-    "temperature": 12,
+    "data": 12,
     "package": "MFGPKG1",
     "batch": "ZAX42H"
 }

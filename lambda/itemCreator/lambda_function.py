@@ -20,8 +20,7 @@ ledger_name = os.environ.get('LedgerNameString')
 def insert_item_document(driver, table_name, document, fieldname , fieldvalue):
    
     print('First Checking if record exist or not') 
-    #document_version = 0
-    
+   
     statement = "SELECT * FROM {} WHERE {} = '{}'".format(table_name,fieldname, fieldvalue)
     print(statement)
     
@@ -30,8 +29,6 @@ def insert_item_document(driver, table_name, document, fieldname , fieldvalue):
     # Check if there is any record in the cursor
     first_record = next(cursor, None)
     
-    #print(first_record)
-
     if first_record:
         # Record already exists, no need to insert
        
@@ -40,9 +37,7 @@ def insert_item_document(driver, table_name, document, fieldname , fieldvalue):
         print(statement)
         cursor = driver.execute_lambda(lambda executor: executor.execute_statement(statement))
         for doc in cursor:
-            #print(doc['documentId'])
             document_id = doc['id']
-            #document_version = doc['version']
         
         pass
     else:
@@ -50,7 +45,6 @@ def insert_item_document(driver, table_name, document, fieldname , fieldvalue):
         print('Inserting documents in the {} table...'.format(table_name))
         statement = 'INSERT INTO {} ?'.format(table_name)
         cursor = driver.execute_lambda(lambda executor: executor.execute_statement(statement,convert_object_to_ion(document)))
-        #print('cursor type is - {}'.format(type(cursor)))
         
         if next(cursor, None):
             statement = "SELECT metadata.id, metadata.version FROM _ql_committed_{} AS p WHERE p.data.{} = '{}'".format(table_name,fieldname, fieldvalue)
@@ -71,12 +65,9 @@ def lambda_handler(event, context):
     return_msg = ''
     
     if event.get('body') is None:
-        print("lambda test flow")
-        #ledger_name = event.get('ledgername')
-        #manufacturer_id = event.get('item').get('Manufacturer')
+        print("lambda console flow")
         batch_number = event.get('item').get('ItemSpecifications').get('MfgBatchNumber')
         unit_count = event.get('item').get('ItemSpecifications').get('MfgUnitCount')
-        
       
     else:
         API_flow = True
@@ -91,7 +82,8 @@ def lambda_handler(event, context):
     # Create QLDB driver for item processing
     try:
         with create_qldb_driver(ledger_name) as driver:
-            # Fetch the authenticated user id 
+            # Fetch the authenticated user id, if invoked via auth flow else use default 
+            useremail = ''
             if event.get('requestContext').get('authorizer').get('claims') is not None:
                 useremail = event.get('requestContext').get('authorizer').get('claims').get('email')
                 print('Authorized user email on token - {}'.format(useremail))
@@ -100,7 +92,6 @@ def lambda_handler(event, context):
                 item_id = batch_number+"000"+str(i)
                 newitem = {'ItemId':item_id, "PkgOwner": useremail}
                 if API_flow:
-                    #itempayload = event.get('body').get('item')
                     itempayload = body_dict_payload.get('item')
                 else:
                     itempayload = event.get('item')
@@ -109,7 +100,6 @@ def lambda_handler(event, context):
                 print('Preparing to insert document - {}'.format(i))
                 doc_id = insert_item_document(driver,"Item", itempayload, 'ItemId' , item_id)
                 print(doc_id)
-                #print(doc_version)
                 
     except Exception as e:
         processingerror = True
@@ -120,7 +110,6 @@ def lambda_handler(event, context):
         return_msg = "Successfully added Items"
         
     else:
-        # TODO implement
         return_msg = "Item Add functionality failed"
         
     response = {
