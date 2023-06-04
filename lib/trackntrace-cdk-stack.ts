@@ -258,84 +258,67 @@ export class TrackntraceCdkStack extends Stack {
   
   const trkntrcResource = api.root.addResource('trackntrace');
   const ledgerResource = trkntrcResource.addResource('ledger'); // GET with querystring , POST
-  // Test code 
-  // ledgerResource.addMethod('GET', new apigw.LambdaIntegration(testIntegrator,{allowTestInvoke:true, 
-  //                                 // requestParameters:{"integration.request.querystring.ledgerName" : "method.request.querystring.ledgerName"},
-  //                                 //requestTemplates:{ "application/json": "{ \"ledgerName\": \" $input.params('ledgerName')\" }" }
-  //                                 }), 
-  //   {
-  //     authorizer: auth,
-  //     authorizationType: apigw.AuthorizationType.COGNITO
-      
-  //   })
-  
-  // ledgerResource.addMethod('POST', new apigw.LambdaIntegration(testIntegrator,{allowTestInvoke:true, 
-  //                                 // requestParameters:{"integration.request.querystring.ledgerName" : "method.request.querystring.ledgerName"},
-  //                                 //requestTemplates:{ "application/json": "{ \"ledgerName\": \" $input.params('ledgerName')\" }" }
-  //                                 }), 
-  //   {
-  //     authorizer: auth,
-  //     authorizationType: apigw.AuthorizationType.COGNITO
-      
-  //   })
   
   ledgerResource.addMethod('GET', new apigw.LambdaIntegration(ledgerDescriber,{allowTestInvoke:true, 
-                                  // requestParameters:{"method.request.querystring.ledgerName": "true"},
-                                  // requestTemplates:{ "application/json": "{ \"ledgerName\": \" $input.params('ledgerName')\" }" }
                                   }), 
-    // {
-    //   authorizer: auth,
-    //   authorizationType: apigw.AuthorizationType.COGNITO
+    {
+      authorizer: auth,
+      authorizationType: apigw.AuthorizationType.COGNITO
       
-    // }
+    }
     )
   ledgerResource.addMethod('POST', new apigw.LambdaIntegration(ledgerInitializer,{allowTestInvoke:true}), 
-    // {
-    //   authorizer: auth,
-    //   authorizationType: apigw.AuthorizationType.COGNITO
+    {
+      authorizer: auth,
+      authorizationType: apigw.AuthorizationType.COGNITO
       
-    // }
+    }
     )
-  // const loginResource = trkntrcResource.addResource('login'); // POST
-  // loginResource.addMethod('POST')
-  // const registerResource = trkntrcResource.addResource('register'); // POST 
-  // registerResource.addMethod('POST')
   
   const productResource = trkntrcResource.addResource('product');
   
   productResource.addMethod('POST', new apigw.LambdaIntegration(itemCreator,{allowTestInvoke:true}), 
-    // {
-    //   authorizer: auth,
-    //   authorizationType: apigw.AuthorizationType.COGNITO
+    {
+      authorizer: auth,
+      authorizationType: apigw.AuthorizationType.COGNITO
       
-    // }
+    }
     )
     
   productResource.addMethod('PUT', new apigw.LambdaIntegration(itemUpdate,{allowTestInvoke:true}), 
-    // {
-    //   authorizer: auth,
-    //   authorizationType: apigw.AuthorizationType.COGNITO
+    {
+      authorizer: auth,
+      authorizationType: apigw.AuthorizationType.COGNITO
       
-    // }
+    }
     )
   
   productResource.addMethod('GET', new apigw.LambdaIntegration(itemGet,{allowTestInvoke:true}), 
-    // {
-    //   authorizer: auth,
-    //   authorizationType: apigw.AuthorizationType.COGNITO
+    {
+      authorizer: auth,
+      authorizationType: apigw.AuthorizationType.COGNITO
       
-    // }
+    }
     )
     
   const validateResource = trkntrcResource.addResource('validate');  // POST - verify paylod for compliance and coldchain
   
   validateResource.addMethod('POST', new apigw.LambdaIntegration(dataValidation,{allowTestInvoke:true}), 
-    // {
-    //   authorizer: auth,
-    //   authorizationType: apigw.AuthorizationType.COGNITO
+    {
+      authorizer: auth,
+      authorizationType: apigw.AuthorizationType.COGNITO
       
-    // }
+    }
     )
+    const simulateResource = trkntrcResource.addResource('simulate');  // POST - sensor payload for coldchain
+  
+    simulateResource.addMethod('POST', new apigw.LambdaIntegration(sensorUpdate,{allowTestInvoke:true}), 
+      {
+        authorizer: auth,
+        authorizationType: apigw.AuthorizationType.COGNITO
+        
+      }
+      )    
 
 // AWS IoT thing and rule 
 
