@@ -337,6 +337,16 @@ export class TrackntraceCdkStack extends Stack {
     // }
     )
 
+  const simulateResource = trkntrcResource.addResource('simulate');  // POST - sensor payload for coldchain update
+  
+  simulateResource.addMethod('POST', new apigw.LambdaIntegration(sensorUpdate,{allowTestInvoke:true}), 
+    // {
+    //   authorizer: auth,
+    //   authorizationType: apigw.AuthorizationType.COGNITO
+      
+    // }
+    )
+
 // AWS IoT thing and rule 
 
   const trackntraceSensor = new iot.CfnThing(this, 'trackntraceSensor', /* all optional props */ {
