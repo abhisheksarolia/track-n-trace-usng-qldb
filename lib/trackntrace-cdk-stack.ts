@@ -1,4 +1,4 @@
-import { Duration, Stack, StackProps, RemovalPolicy } from 'aws-cdk-lib';
+import { Duration, Stack, StackProps, RemovalPolicy, CfnOutput } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import * as apigw from 'aws-cdk-lib/aws-apigateway';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -355,7 +355,12 @@ export class TrackntraceCdkStack extends Stack {
     sql: querySql,
     }
   })
-  
+
+  // 👇 create an Output for Ledger Name
+  new CfnOutput(this, 'ledgerName', {
+    value: ledgerName,
+    description: 'The name of the Amazon QLDB ledger'
+  });
 
   }
 }
