@@ -84,9 +84,10 @@ def lambda_handler(event, context):
         with create_qldb_driver(ledger_name) as driver:
             # Fetch the authenticated user id, if invoked via auth flow else use default 
             useremail = ''
-            if event.get('requestContext').get('authorizer').get('claims') is not None:
-                useremail = event.get('requestContext').get('authorizer').get('claims').get('email')
-                print('Authorized user email on token - {}'.format(useremail))
+            if event.get('requestContext').get('authorizer') is not None:
+                if event.get('requestContext').get('authorizer').get('claims') is not None:    
+                    useremail = event.get('requestContext').get('authorizer').get('claims').get('email')
+                    print('Authorized user email on token - {}'.format(useremail))
                 
             for i in range(1,unit_count+1):
                 item_id = batch_number+"000"+str(i)
