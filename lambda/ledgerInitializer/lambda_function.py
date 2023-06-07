@@ -1,3 +1,23 @@
+# /*
+#  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#  * SPDX-License-Identifier: MIT-0
+#  *
+#  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+#  * software and associated documentation files (the "Software"), to deal in the Software
+#  * without restriction, including without limitation the rights to use, copy, modify,
+#  * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+#  * permit persons to whom the Software is furnished to do so.
+#  *
+#  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+#  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+#  * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+#  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+#  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+#  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#  */
+
+# Functionality to initialize Amaon QLDB Ledger
+
 from time import sleep
 from datetime import datetime
 from decimal import Decimal
@@ -10,11 +30,9 @@ import os
 
 
 qldb_client = client('qldb')
-
 LEDGER_CREATION_POLL_PERIOD_SEC = 20
 ACTIVE_STATE = "ACTIVE"
 ledger_name = os.environ.get('LedgerNameString')
-
 
 def create_ledger(name):
     """
@@ -91,14 +109,9 @@ def create_index(driver, table_name, index_attribute):
     cursor = driver.execute_lambda(lambda executor: executor.execute_statement(statement))
     return len(list(cursor))
 
-
 def lambda_handler(event, context):
-    
-    # API_flow = False
     processing_error = False
     return_msg = ''
-    print(event)
-    
     """
     Create a ledger and wait for it to be active.
     """
@@ -109,41 +122,30 @@ def lambda_handler(event, context):
         processing_error = True
         print('Unable to create the ledger! - {}'.format(e))
         return_msg = 'Unable to create the ledger! - {}'.format(e)
-        #raise e
-        
+
     if not processing_error:
-        #proceed ahead
-        
         """
         Create required tables, Indexes
         """
         try:
             with create_qldb_driver(ledger_name) as driver:
-                
                 print('Creating tables on ledger...')
-                
                 create_table(driver, Constants.ITEM_TABLE_NAME)
                 create_table(driver, Constants.SENSOR_TABLE_NAME)
-                
                 print('Tables created successfully.')
-                
                 print('Now, creating Indexes ..')
                 create_index(driver, Constants.ITEM_TABLE_NAME, Constants.ITEM_ID_INDEX_NAME)
                 create_index(driver, Constants.ITEM_TABLE_NAME, Constants.ITEM_MFG_BATCH_NUMBER_INDEX_NAME)
                 create_index(driver, Constants.ITEM_TABLE_NAME, Constants.ITEM_PKG_LABEL_INDEX_NAME)
                 create_index(driver, Constants.SENSOR_TABLE_NAME, Constants.SENSOR_ID_INDEX_NAME)
-                
                 print('Index creation completed')        
-                
         except Exception as e:
             processing_error = True
             print('Ledger Initialization process failed - {}',format(e))
             return_msg = 'Ledger Initialization process failed - {}',format(e)
-            
 
     if not processing_error:
         return_msg = "Ledger Initialization completed successfully"
-        
         
     response = {
         "isBase64Encoded": "false",

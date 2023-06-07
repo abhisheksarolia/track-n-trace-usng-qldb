@@ -1,3 +1,23 @@
+# /*
+#  * Copyright Amazon.com, Inc. or its affiliates. All Rights Reserved.
+#  * SPDX-License-Identifier: MIT-0
+#  *
+#  * Permission is hereby granted, free of charge, to any person obtaining a copy of this
+#  * software and associated documentation files (the "Software"), to deal in the Software
+#  * without restriction, including without limitation the rights to use, copy, modify,
+#  * merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+#  * permit persons to whom the Software is furnished to do so.
+#  *
+#  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+#  * INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+#  * PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+#  * HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+#  * OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+#  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#  */
+
+# Validate functionality for journal transactions
+
 from time import sleep
 from datetime import datetime
 from decimal import Decimal
@@ -55,29 +75,21 @@ def get_revision(ledger_name, document_id, block_address, digest_tip_address):
 
 def verify_coldchain(driver, ledger_name, package, batch):
     print('Starting coldchain verification..')
+    output = ""
     status = False 
     # Get the current tip of journal in the ledger
     current_tip = get_digest_result(ledger_name)
-    
-    #print(current_tip.get('Digest'))
-    
-    # Decode the encoded digest to bytes 
-
-    #digest_bytes = b64decode(current_tip.get('Digest'))
     digest_bytes = current_tip.get('Digest')
-    #print(digest_bytes)
     
     digestblock_address = current_tip.get('DigestTipAddress')
-    #print(digestblock_address)
-
-    print('Fetching all items under package - {} and batch - {}, and verifying coldchain on each one by one ..'.format(package, batch))
     
-    statement = "SELECT r.metadata.id As id, r.blockAddress AS blockAddress FROM _ql_committed_Item AS r WHERE r.data.PackageLabel = '{}' AND r.data.ItemSpecifications.MfgBatchNumber = '{}'".format(package, batch)
+    print('Fetching all items with revision when coldchain was activated for package - {} and batch - {}, and verifying coldchain revisions on each one by one ..'.format(package, batch))
+    
+    statement = "SELECT r.metadata.id As id, r.blockAddress AS blockAddress FROM history(Item) AS r WHERE r.data.PackageLabel = '{}' AND r.data.ItemSpecifications.MfgBatchNumber = '{}' AND r.data.PackageChain.Status = 'Activated'".format(package, batch)
     print(statement)
     cursor = driver.execute_lambda(lambda executor: executor.execute_statement(statement))
     
     for doc in cursor:
-        #print(doc)
         document_block_address = doc['blockAddress']
         document_id = doc['id']
         
@@ -91,7 +103,6 @@ def verify_coldchain(driver, ledger_name, package, batch):
             
         try:
             verified = verify_document(document_hash, digest_bytes, proof)
-            #status = verified
             if not verified:
                 print('Document revision is not verified, data compromised - {}'.format(document_id))
                 print('Aborting rest of the verification chain..')
@@ -100,37 +111,42 @@ def verify_coldchain(driver, ledger_name, package, batch):
             else:
                 print('Success! Coldchain verified for document - {}'. format(document_id))
                 status = True
+            
+            # Fetch latest revision coldchain status to report 
+            statement1 = "SELECT r.data.ItemId As id, r.data.PackageChain.Status As status FROM _ql_committed_Item AS r WHERE r.data.PackageLabel = '{}' AND r.data.ItemSpecifications.MfgBatchNumber = '{}' AND r.metadata.id = '{}'".format(package, batch, document_id)
+            print(statement1)
+            cursor1 = driver.execute_lambda(lambda executor: executor.execute_statement(statement1))
+            for docn in cursor1:
+                item_id = docn['id']
+                status = docn['status']
+            if item_id in output:
+                #skip
+                print("Skipping duplicate")
+            else:
+                output = output + item_id + " colchain - " + status + ';'
         except Exception as e:
             print('Error in verifying coldchain on document using QLDB returned proof nodes - {}',format(e))
             status = False
             
-    return status
+    return status, output
 
 def verify_batch_compliance(driver, ledger_name, batch):
     print('Starting batch compliance verification..')
     status = False 
+    output = ""
     # Get the current tip of journal in the ledger
     current_tip = get_digest_result(ledger_name)
-    
-    #print(current_tip.get('Digest'))
-    
-    
-    #digest_bytes = b64decode(current_tip.get('Digest'))
     digest_bytes = current_tip.get('Digest')
-    #print(digest_bytes)
     
     digestblock_address = current_tip.get('DigestTipAddress')
-    #print(digestblock_address)
-
-    print('Fetching all items under batch - {}, and verifying complaince on each one by one ..'.format(batch))
+ 
+    print('Fetching all item revisions with QA under batch - {}, and verifying complaince on each one by one ..'.format(batch))
     
-    statement = "SELECT r.metadata.id As id, r.blockAddress AS blockAddress FROM _ql_committed_Item AS r WHERE r.data.ItemSpecifications.MfgBatchNumber = '{}'".format(batch)
+    statement = "SELECT r.metadata.id As id, r.blockAddress AS blockAddress FROM history(Item) AS r WHERE r.data.ItemSpecifications.MfgBatchNumber = '{}' AND r.data.ItemSpecifications.QualityCompliance = 'PASS'".format(batch)
     print(statement)
     cursor = driver.execute_lambda(lambda executor: executor.execute_statement(statement))
     
     for doc in cursor:
-        
-        #print(doc)
         document_block_address = doc['blockAddress']
         document_id = doc['id']
         
@@ -144,7 +160,6 @@ def verify_batch_compliance(driver, ledger_name, batch):
             
         try:
             verified = verify_document(document_hash, digest_bytes, proof)
-            #status = verified
             if not verified:
                 print('Document revision is not verified, data compromised - {}'.format(document_id))
                 print('Aborting rest of the verification chain..')
@@ -153,11 +168,23 @@ def verify_batch_compliance(driver, ledger_name, batch):
             else:
                 print('Success! Compliance verified for document - {}'. format(document_id))
                 status = True
+            # Fetch latest revision for QA status to report 
+            statement1 = "SELECT r.data.ItemId As id, r.data.ItemSpecifications.QualityCompliance As qa FROM _ql_committed_Item AS r WHERE r.data.ItemSpecifications.MfgBatchNumber = '{}' AND r.metadata.id = '{}'".format(batch, document_id)
+            print(statement1)
+            cursor1 = driver.execute_lambda(lambda executor: executor.execute_statement(statement1))
+            for docn in cursor1:
+                item_id = docn['id']
+                status = docn['qa']
+            if item_id in output:
+                #skip
+                print("Skipping duplicate")
+            else:
+                output = output + item_id + " Quality Compliance - " + status + ';'            
         except Exception as e:
             print('Error in verifying compliance document chain using QLDB returned proof nodes - {}',format(e))
             status = False
             
-    return status
+    return status, output
     
 
 def lambda_handler(event, context):
@@ -170,16 +197,12 @@ def lambda_handler(event, context):
     verify_status = False
     
     if event.get('body') is None:
-        # pick from lambda test payload
-        #print("lambda test flow")
-        #ledger_name = event.get('ledgername')
+        # pick from lambda test console payload
+        print("AWS Lambda console flow")
         verify_activity = event.get('verify')
-        #print(ledger_name)
     else:
         API_flow = True
         # pick from API request
-        # print("API integration flow")
-        # print(type(event.get('body')))
         body_dict_payload = json.loads(event.get('body'))
         verify_activity = body_dict_payload.get('verify')
     
@@ -196,12 +219,12 @@ def lambda_handler(event, context):
     
                     print("Verifying ledger for Quality compliance on batch - {}. Processing ...".format(eachbatch))
                             
-                    verify_status = verify_batch_compliance(driver, ledger_name, eachbatch)
+                    verify_status, msg = verify_batch_compliance(driver, ledger_name, eachbatch)
                         
                     if verify_status:
-                        return_message = ''+ eachbatch + ': Quality compliance data verified on all items'
+                        return_message = ''+ eachbatch + ': Quality compliance data verified on all items ->' + msg
                     else:
-                        return_message = ''+ eachbatch + ': Quality compliance data not verified on all items'
+                        return_message = ''+ eachbatch + ': Quality compliance data not verified on all items ->' + msg
             
             if verify_activity == 'Coldchain':
                 
@@ -216,12 +239,12 @@ def lambda_handler(event, context):
     
                     print("Verifying ledger for coldchain on package - {} and batch - {}. Processing ...".format(package, eachbatch))
                             
-                    verify_status = verify_coldchain(driver, ledger_name, package, eachbatch)
+                    verify_status, msg = verify_coldchain(driver, ledger_name, package, eachbatch)
                         
                     if verify_status:
-                        return_message = ''+ eachbatch + ': Coldchain data verified on all items'
+                        return_message = ''+ eachbatch + ': Coldchain data verified on all items -> ' + msg
                     else:
-                        return_message = ''+ eachbatch + ': Coldchain data not verified on all items'
+                        return_message = ''+ eachbatch + ': Coldchain data not verified on all items -> ' + msg
             
     except Exception as e:
             processing_error = True
@@ -242,4 +265,3 @@ def lambda_handler(event, context):
             "statusCode": 503,
             "body": return_message
         }
-        
