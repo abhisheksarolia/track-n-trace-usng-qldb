@@ -235,10 +235,10 @@ export class TrackntraceCdkStack extends Stack {
       redirectUri: 'https://oauth.pstmn.io/v1/callback', // must be a URL configured under 'callbackUrls' with the client
     });
 
-    // REST API for API GATEWAY 
-    const auth = new apigw.CognitoUserPoolsAuthorizer(this, 'trackntraceAuthorizer', {
-      cognitoUserPools: [userPool]
-    });
+    // // REST API for API GATEWAY  - Uncomment below lines if need to enable authentication using Cognito
+    // const auth = new apigw.CognitoUserPoolsAuthorizer(this, 'trackntraceAuthorizer', {
+    //   cognitoUserPools: [userPool]
+    // });
 
     const api = new apigw.RestApi(this, 'TracknTraceApi', {
       restApiName: 'TracknTraceApi'+'-'+start,

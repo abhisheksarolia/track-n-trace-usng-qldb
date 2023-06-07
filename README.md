@@ -14,12 +14,12 @@ The quick deployment of the solution is using [AWS Cloud Development Kit (AWS CD
 
 You can use [AWS Cloud9](https://docs.aws.amazon.com/cloud9/latest/user-guide/setup-express.html), a cloud-based integrated development environment, to complete the actions or run the setup locally on a Windows or Mac workstation/laptop. If you are running the set up locally then install and configure following toolset – 
 
-•	[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
-•	[Node.js](https://nodejs.org/en/download)
-•	[Python](https://www.python.org/downloads/release/python-3716/)
-•	[TypeScript](https://www.npmjs.com/package/typescript)
-•	[AWS CDK for TypeScript](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html) 
-•	[Postman](https://www.postman.com/) or [Curl](https://curl.se/)
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+* [Node.js](https://nodejs.org/en/download)
+* [Python](https://www.python.org/downloads/release/python-3716/)
+* [TypeScript](https://www.npmjs.com/package/typescript)
+* [AWS CDK for TypeScript](https://docs.aws.amazon.com/cdk/v2/guide/getting_started.html) 
+* [Postman](https://www.postman.com/) or [Curl](https://curl.se/)
 
 We are using AWS Cloud9 to set up and run the project, which comes pre-installed with all the above tooling. Follow below steps for solution setup - 
 
@@ -28,6 +28,8 @@ We are using AWS Cloud9 to set up and run the project, which comes pre-installed
 git clone https://github.com/abhisheksarolia/track-n-trace-usng-qldb.git
 
 cd track-n-trace-usng-qldb/
+
+git checkout feature/review
 ```
 
 2)	The AWS CDK includes a library of AWS constructs called the AWS Construct Library, organized into various modules. The library contains constructs for each AWS service. Install the main CDK package for TypeScript – 
@@ -46,7 +48,7 @@ pip install -r requirements.txt -t ./sharedLib/python
 
 5)	Validate the CDK version on your Cloud9 instance – 
 ```
-cdk –-version
+cdk version
 ```
 If the output of above command comes as “2.80.0”, then upgrade the CDK to “2.81.0”
 ```
@@ -54,7 +56,7 @@ npm install -g aws-cdk@2.81.0 --force
 ```
 Validate the version again to make sure CDK version is upgraded.
 ```
-cdk –-version 
+cdk version 
 ```
 6)	Synthesize the CDK template. 
 ```
