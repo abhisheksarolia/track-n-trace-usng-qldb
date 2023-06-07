@@ -73,6 +73,12 @@ cdk bootstrap
 cdk deploy
 ```
 
+> Once the stack deployment completes, verify created resources in the AWS console under CloudFormation stacks with the name “TrackntraceCdkStack”
+
+
+> For invoking API in this post, we will use Postman but you can invoke API via curl also. Go ahead and install Postman locally from [here](https://www.postman.com/downloads/?utm_source=postman-home).
+
+
 
 Clean Up:
 
