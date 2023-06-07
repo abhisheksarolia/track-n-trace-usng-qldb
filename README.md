@@ -29,7 +29,7 @@ git clone https://github.com/abhisheksarolia/track-n-trace-usng-qldb.git
 
 cd track-n-trace-usng-qldb/
 
-git checkout feature/review
+git checkout feature/auth
 ```
 
 2)  The AWS CDK includes a library of AWS constructs called the AWS Construct Library, organized into various modules. The library contains constructs for each AWS service. Install the main CDK package for TypeScript – 
